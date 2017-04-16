@@ -22,6 +22,8 @@ public class PersonManager {
     private File file;
     private BufferedReader reader;
     private PrintWriter writer;
+    private FileOutputStream stream;
+    private Person[] persons;
 
     public PersonManager() throws Exception {
         this("persons.cvs");
@@ -33,8 +35,9 @@ public class PersonManager {
         if (!file.exists()) {
             file.createNewFile();
         }
-        reader = new BufferedReader(new FileReader(file));
-        writer = new PrintWriter(new FileOutputStream(file, true));
+        stream = new FileOutputStream(file, true);
+        writer = new PrintWriter(stream);
+        loadPersons();
     }
 
     public String getFileName() {
@@ -47,19 +50,64 @@ public class PersonManager {
         return true;
     }
     
-    public void generate(int n) {
-        for (int i = 0; i < 100; i++) {
-            save(new Person(i + 1, "Name " + (i + 1), "E-mail " + (i + 1), "Address "  + (i + 1)));
+    public boolean save() throws Exception {
+        stream = new FileOutputStream(file, true);
+        writer = new PrintWriter(stream);
+        for (int i = 0; i < persons.length; i++) {
+            writer.println(persons[i]);
         }
+        writer.flush();
+        return true;
+    }
+    
+    public boolean update(Person person) throws Exception {
+        persons[person.getId()].setName(person.getName());
+        persons[person.getId()].setAddress(person.getAddress());
+        persons[person.getId()].setEmail(person.getEmail());
+        save();
+        return true;
     }
 
-    public Person[] getPersons() throws Exception {
-        Person[] persons = new Person[1000];
-        int index = 0;
-        String line;
-        reader.ready();
-        while ((line = reader.readLine()) != null) {
-            persons[index++] = parse(line);
+    public void generate(int n) {
+        Person person;
+        for (int i = 0; i < 100; i++) {
+            person = new Person(i, "Name " + (i + 1), "E-mail " + (i + 1), "Address " + (i + 1));
+            if (exists(person)) {
+                person.setId(getId());
+            }
+            persons[person.getId()] = person;
+            save(person);
+        }
+    }
+    
+    public boolean exists(Person person) {
+        for (int i = 0; i < persons.length; i++) {
+            if (persons[i] != null && persons[i].equals(person)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public int getId() {
+        for (int i = 0; i < persons.length; i++) {
+            if (persons[i] == null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public final Person[] loadPersons() throws Exception {
+        if (persons == null) {
+            reader = new BufferedReader(new FileReader(file));
+            persons = new Person[1000];
+            int index = 0;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                persons[index++] = parse(line);
+            }
+            reader.close();
         }
         return persons;
     }
