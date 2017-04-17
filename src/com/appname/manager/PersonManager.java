@@ -45,25 +45,34 @@ public class PersonManager {
     }
 
     public boolean save(Person person) {
+        persons[person.getId()] = person;
         writer.println(person);
         writer.flush();
         return true;
     }
-    
+
     public boolean save() throws Exception {
         stream = new FileOutputStream(file, true);
         writer = new PrintWriter(stream);
-        for (int i = 0; i < persons.length; i++) {
-            writer.println(persons[i]);
+        for (Person person : persons) {
+            if (person != null) {
+                writer.println(person);
+            }
         }
         writer.flush();
         return true;
     }
-    
+
     public boolean update(Person person) throws Exception {
         persons[person.getId()].setName(person.getName());
         persons[person.getId()].setAddress(person.getAddress());
         persons[person.getId()].setEmail(person.getEmail());
+        save();
+        return true;
+    }
+
+    public boolean delete(int id) throws Exception {
+        persons[id] = null;
         save();
         return true;
     }
@@ -79,7 +88,7 @@ public class PersonManager {
             save(person);
         }
     }
-    
+
     public boolean exists(Person person) {
         for (int i = 0; i < persons.length; i++) {
             if (persons[i] != null && persons[i].equals(person)) {
@@ -88,7 +97,17 @@ public class PersonManager {
         }
         return false;
     }
-    
+
+    public Person getPerson(int id) {
+        for (Person person : persons) {
+            if (person != null && person.getId() == id) {
+                return person;
+            }
+        }
+
+        return null;
+    }
+
     public int getId() {
         for (int i = 0; i < persons.length; i++) {
             if (persons[i] == null) {
